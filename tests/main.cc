@@ -4,9 +4,9 @@
 
 struct IostreamWrapper {
   void write(const char *buf, size_t n) {
-    // if (strlen(buf) < n) {
-    std::cout << buf;
-    // }
+    if (strlen(buf) < n) {
+      std::cout << buf;
+    }
   }
 };
 
