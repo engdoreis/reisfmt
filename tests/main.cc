@@ -12,7 +12,7 @@ struct IostreamMock {
 TEST(Fmt, simple_string) {
   auto mock = IostreamMock();
   reisfmt::Fmt<IostreamMock, 64> fmt(mock);
-  std::string msg("Hello World!!");
+  std::string msg("Hello World!");
   fmt.print(msg.c_str());
   EXPECT_EQ(mock.buf_.data(), msg);
 }
