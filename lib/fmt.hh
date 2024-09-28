@@ -13,7 +13,7 @@ concept Writeable = requires(T t, const char *buf, size_t n) {
 template <Writeable T, size_t N>
 class Fmt {
  private:
-  T device;
+  T &device;
   std::array<char, N> buf;
 
  public:
