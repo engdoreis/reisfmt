@@ -4,6 +4,9 @@ set(NAME reisfmt)
 
 project(${NAME} LANGUAGES C CXX ASM)
 
+# include(CTest)
+enable_testing()
+
 # For lsp
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -11,7 +14,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_compile_options(-Wall -Wextra -Wpedantic)
+# add_compile_options(-Wall -Wextra -Wpedantic)
+
 
 add_subdirectory(tests)
 
