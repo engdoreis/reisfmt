@@ -17,6 +17,11 @@ class Fmt {
   std::array<char, N> buf;
   const char *fmt_str = nullptr;
 
+  enum class Radix { Bin = 2, Oct = 8, Dec = 10, Hex = 16 };
+
+  Radix radix_  = Radix::Dec;
+  uint32_t fill = 0;
+
  public:
   Fmt(T &device) : device(device) {};
 
@@ -34,7 +39,18 @@ class Fmt {
   void format(U first, Args... rest) {
     while (fmt_str && *fmt_str) {
       if (*fmt_str == '{') {
-        to_str(buf, first);
+        parse_specification();
+        switch (radix_) {
+          case Radix::Dec:
+            to_str(buf, first);
+            break;
+          case Radix::Hex:
+            to_hex_str(buf, first);
+            break;
+          default:
+            break;
+        };
+
         device.write(buf.data(), strlen(buf.data()));
 
         while (*(fmt_str++) == '}');
@@ -45,6 +61,29 @@ class Fmt {
       }
     }
   }
+
+  void parse_specification() {
+    reset_specification();
+    if (fmt_str[1] == ':') {
+      fmt_str += 2;
+      switch (*fmt_str) {
+        case 'x':
+          radix_ = Radix::Hex;
+          break;
+        case 'd':
+          radix_ = Radix::Dec;
+          break;
+        case 'b':
+          radix_ = Radix::Bin;
+          break;
+        case 'o':
+          radix_ = Radix::Oct;
+          break;
+      }
+    }
+  }
+
+  void reset_specification() { radix_ = Radix::Dec; }
 
  public:
   template <typename... Args>
@@ -87,6 +126,39 @@ class Fmt {
     auto len = std::min(buf.size() - 1, str.length());
     std::copy_n(str.begin(), len, buf.begin());
     buf[len] = 0;
+    return buf.data();
+  }
+
+  template <size_t SIZE, typename U>
+    requires std::integral<U>
+  static inline char *to_hex_str(std::array<char, SIZE> &buf, U num) {
+    assert(SIZE > sizeof(U) * 2 + 1);
+    constexpr U shift = (sizeof(U) * 8 - 4);
+
+    size_t head = 0;
+    if constexpr (std::signed_integral<U>) {
+      // This code won't be linked for unsigned U.
+      if (num < 0) {
+        buf[head++] = '-';
+        num         = 0 - num;
+      }
+    }
+    for (size_t i = 0; i < (sizeof(U) * 2); ++i) {
+      int mask = ((num >> shift) & 0xf);
+      if (mask < 10 && mask > 0) {
+        buf[head++] = ((num >> shift) & 0xf) + '0';
+      } else if (mask >= 10) {
+        buf[head++] = ((num >> shift) & 0xf) + 'a' - 10;
+      }
+      num <<= 4;
+    }
+    buf[head] = 0;
+    return buf.data();
+  }
+
+  template <size_t SIZE>
+  static char *to_hex_str(std::array<char, SIZE> &buf, std::string str) {
+    buf[0] = 0;
     return buf.data();
   }
 };

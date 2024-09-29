@@ -68,6 +68,18 @@ TEST_F(FmtTest, int_arg_missing) {
   EXPECT_EQ(mock_.to_string(), "10 * 20 = {}");
 }
 
+TEST_F(FmtTest, hex_unsigned) {
+  constexpr const char *msg = "{:x} * {} = {:x}...";
+  fmt_.print(msg, 10, 20, 10 * 20);
+  EXPECT_EQ(mock_.to_string(), std::format(msg, 10, 20, 10 * 20));
+}
+
+TEST_F(FmtTest, hex_signed) {
+  constexpr const char *msg = "{:x} * {} = {:x}...";
+  fmt_.print(msg, -10, 20, -10 * 20);
+  EXPECT_EQ(mock_.to_string(), std::format(msg, -10, 20, -10 * 20));
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
