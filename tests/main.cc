@@ -30,6 +30,20 @@ TEST_F(FmtTest, simple_string) {
   EXPECT_EQ(mock_.to_string(), msg);
 }
 
+TEST_F(FmtTest, string_arg) {
+  constexpr const char *msg = "Hello {} !!";
+  std::string arg("World");
+  fmt_.print(msg, arg);
+  EXPECT_EQ(mock_.to_string(), std::format(msg, arg));
+}
+
+TEST_F(FmtTest, c_string_arg) {
+  constexpr const char *msg = "Hello {} !!";
+  const char *arg           = "World";
+  fmt_.print(msg, arg);
+  EXPECT_EQ(mock_.to_string(), std::format(msg, arg));
+}
+
 TEST_F(FmtTest, pos_int) {
   constexpr const char *msg = "{} * {} = {}...";
   fmt_.print(msg, 10, 20, 10 * 20);

@@ -56,7 +56,7 @@ class Fmt {
 
   template <size_t SIZE, typename U>
     requires std::integral<U>
-  static inline char *to_str(std::array<char, SIZE> &buf, U num) {
+  static char *to_str(std::array<char, SIZE> &buf, U num) {
     size_t head = 0;
     size_t tail = SIZE - 1;
     if constexpr (std::signed_integral<U>) {
@@ -78,6 +78,14 @@ class Fmt {
       buf[head + i] = buf[tail + i];
     }
 
+    buf[len] = 0;
+    return buf.data();
+  }
+
+  template <size_t SIZE>
+  static char *to_str(std::array<char, SIZE> &buf, const std::string str) {
+    auto len = std::min(buf.size() - 1, str.length());
+    std::copy_n(str.begin(), len, buf.begin());
     buf[len] = 0;
     return buf.data();
   }
