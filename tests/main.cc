@@ -30,6 +30,19 @@ TEST_F(FmtTest, simple_string) {
   EXPECT_EQ(mock_.to_string(), msg);
 }
 
+TEST_F(FmtTest, null_fmt) {
+  fmt_.print(nullptr);
+  EXPECT_EQ(mock_.to_string(), "");
+}
+
+TEST_F(FmtTest, long_arg_str) {
+  constexpr const char *msg = "Hello {} !!";
+  std::string arg64         = std::format("{:*^64}", "world");
+  fmt_.print(msg, arg64);
+  std::string arg63 = std::format("{:*^63}", "world");
+  EXPECT_EQ(mock_.to_string(), std::format(msg, arg63));
+}
+
 TEST_F(FmtTest, string_arg) {
   constexpr const char *msg = "Hello {} !!";
   std::string arg("World");
