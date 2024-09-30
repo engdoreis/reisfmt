@@ -15,7 +15,9 @@ class Fmt {
  private:
   T &device;
   std::array<char, N> buf;
-  const char *fmt_str = nullptr;
+
+  const char *fmt_ = nullptr;
+  size_t fmt_size_ = 0;
 
   enum class Radix { Bin = 2, Oct = 8, Dec = 10, Hex = 16 };
 
@@ -26,47 +28,55 @@ class Fmt {
   Fmt(T &device) : device(device) {};
 
  private:
+  inline char next_fmt(int step = 1) {
+    fmt_size_ -= step;
+    auto res = *fmt_;
+    fmt_ += step;
+    return res;
+  }
   // Base case to stop the recursion.
   void format() {
-    if (fmt_str && *fmt_str) {
-      auto len = strlen(fmt_str);
-      device.write(fmt_str, len);
-      fmt_str += len;
+    if (fmt_ && *fmt_) {
+      device.write(fmt_, fmt_size_);
+      fmt_      = nullptr;
+      fmt_size_ = 0;
     }
   }
 
   template <typename U, typename... Args>
   void format(U first, Args... rest) {
-    while (fmt_str && *fmt_str) {
-      if (*fmt_str == '{') {
+    while (fmt_ && *fmt_) {
+      if (*fmt_ == '{') {
         parse_specification();
+
+        size_t len = 0;
         switch (radix_) {
           case Radix::Dec:
-            to_str(buf, first);
+            len = to_str(buf, first);
             break;
           case Radix::Hex:
-            to_hex_str(buf, first);
+            len = to_hex_str(buf, first);
             break;
           default:
             break;
         };
 
-        device.write(buf.data(), strlen(buf.data()));
+        device.write(buf.data(), len);
 
-        while (*(fmt_str++) == '}');
-        fmt_str++;
+        while (next_fmt() != '}');
         format(rest...);
       } else {
-        device.write(fmt_str++, 1);
+        auto c = next_fmt();
+        device.write(&c, sizeof(c));
       }
     }
   }
 
   void parse_specification() {
     reset_specification();
-    if (fmt_str[1] == ':') {
-      fmt_str += 2;
-      switch (*fmt_str) {
+    if (fmt_[1] == ':') {
+      next_fmt(2);
+      switch (*fmt_) {
         case 'x':
           radix_ = Radix::Hex;
           break;
@@ -88,14 +98,18 @@ class Fmt {
  public:
   template <typename... Args>
   void print(const char *fmt, Args... args) {
-    fmt_str = fmt;
-    format(args...);
-    fmt_str = nullptr;
+    if (fmt) {
+      fmt_ = fmt;
+      // Avoid using libc:strlen for system without libc.
+      for (fmt_size_ = 0; fmt[fmt_size_] != 0; fmt_size_++);
+      format(args...);
+      fmt_ = nullptr;
+    }
   }
 
   template <size_t SIZE, typename U>
     requires std::integral<U>
-  static char *to_str(std::array<char, SIZE> &buf, U num) {
+  static size_t to_str(std::array<char, SIZE> &buf, U num) {
     size_t head = 0;
     size_t tail = SIZE - 1;
     if constexpr (std::signed_integral<U>) {
@@ -118,20 +132,20 @@ class Fmt {
     }
 
     buf[len] = 0;
-    return buf.data();
+    return len;
   }
 
   template <size_t SIZE>
-  static char *to_str(std::array<char, SIZE> &buf, const std::string str) {
+  static size_t to_str(std::array<char, SIZE> &buf, const std::string str) {
     auto len = std::min(buf.size() - 1, str.length());
     std::copy_n(str.begin(), len, buf.begin());
     buf[len] = 0;
-    return buf.data();
+    return len;
   }
 
   template <size_t SIZE, typename U>
     requires std::integral<U>
-  static inline char *to_hex_str(std::array<char, SIZE> &buf, U num) {
+  static inline size_t to_hex_str(std::array<char, SIZE> &buf, U num) {
     assert(SIZE > sizeof(U) * 2 + 1);
     constexpr U shift = (sizeof(U) * 8 - 4);
 
@@ -153,13 +167,13 @@ class Fmt {
       num <<= 4;
     }
     buf[head] = 0;
-    return buf.data();
+    return head;
   }
 
   template <size_t SIZE>
-  static char *to_hex_str(std::array<char, SIZE> &buf, std::string str) {
+  static size_t to_hex_str(std::array<char, SIZE> &buf, std::string str) {
     buf[0] = 0;
-    return buf.data();
+    return 0;
   }
 };
 };  // namespace reisfmt
