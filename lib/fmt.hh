@@ -20,9 +20,12 @@ class Fmt {
   size_t fmt_size_ = 0;
 
   enum class Radix { Bin = 2, Oct = 8, Dec = 10, Hex = 16 };
+  enum class Align { Left, Right, Center };
 
-  Radix radix_  = Radix::Dec;
-  uint32_t fill = 0;
+  Radix radix_    = Radix::Dec;
+  Align align_    = Align::Right;
+  uint32_t width_ = 0;
+  char filler_    = ' ';
 
  public:
   Fmt(T &device) : device(device) {};
@@ -34,6 +37,8 @@ class Fmt {
     fmt_ += step;
     return res;
   }
+
+  inline char peek_fmt(int step = 1) { return *fmt_; }
   // Base case to stop the recursion.
   void format() {
     if (fmt_ && *fmt_) {
@@ -45,55 +50,118 @@ class Fmt {
 
   template <typename U, typename... Args>
   void format(U first, Args... rest) {
-    while (fmt_ && *fmt_) {
-      if (*fmt_ == '{') {
-        parse_specification();
+    if (fmt_ == nullptr || *fmt_ == 0) {
+      return;
+    }
+    auto start = fmt_;
 
-        size_t len = 0;
-        switch (radix_) {
-          case Radix::Dec:
-            len = to_str(buf, first);
-            break;
-          case Radix::Hex:
-            len = to_hex_str(buf, first);
-            break;
-          default:
-            break;
-        };
+    // Find format start guard
+    while (next_fmt() != '{' && fmt_size_ > 0);
+    if (fmt_size_ > 0) {
+      device.write(start, fmt_ - start - 1);
+      parse_specification();
 
-        device.write(buf.data(), len);
+      size_t len = 0;
+      switch (radix_) {
+        case Radix::Dec:
+          len = to_str(buf, first);
+          break;
+        case Radix::Hex:
+          len = to_hex_str(buf, first);
+          break;
+        default:
+          break;
+      };
 
-        while (next_fmt() != '}');
-        format(rest...);
-      } else {
-        auto c = next_fmt();
-        device.write(&c, sizeof(c));
+      if (width_ > len) {
+        for (int i = width_ - len; i > 0; --i) {
+          device.write(&filler_, sizeof(filler_));
+        }
       }
+      device.write(buf.data(), len);
+
+      // Find format end guard.
+      while (next_fmt() != '}');
+      format(rest...);
+    } else {
+      device.write(start, fmt_ - start);
     }
   }
 
   void parse_specification() {
     reset_specification();
-    if (fmt_[1] == ':') {
-      next_fmt(2);
-      switch (*fmt_) {
-        case 'x':
-          radix_ = Radix::Hex;
-          break;
-        case 'd':
-          radix_ = Radix::Dec;
-          break;
-        case 'b':
-          radix_ = Radix::Bin;
-          break;
-        case 'o':
-          radix_ = Radix::Oct;
-          break;
-      }
+    if (peek_fmt() == ':') {
+      next_fmt();
+      parse_fill_and_align();
+      parse_width();
+      parse_type();
     }
   }
 
-  void reset_specification() { radix_ = Radix::Dec; }
+  inline void parse_fill_and_align() {
+    char align = '>';
+    if (fmt_[0] == '<' || fmt_[0] == '>' || fmt_[0] == '^') {
+      align   = fmt_[0];
+      filler_ = ' ';
+      next_fmt();
+    } else if (fmt_[1] == '<' || fmt_[1] == '>' || fmt_[1] == '^') {
+      align   = fmt_[1];
+      filler_ = fmt_[0];
+      next_fmt(2);
+    } else if (std::isdigit(fmt_[1])) {
+      filler_ = fmt_[0];
+      next_fmt();
+    }
+
+    switch (align) {
+      case '<':
+        align_ = Align::Left;
+        break;
+      case '^':
+        align_ = Align::Center;
+        break;
+      case '>':
+      default:
+        align_ = Align::Right;
+        break;
+    }
+  }
+
+  inline void parse_width() {
+    while (std::isdigit(peek_fmt())) {
+      width_ = width_ * 10 + next_fmt() - '0';
+    }
+  }
+
+  inline void parse_type() {
+    switch (peek_fmt()) {
+      case 'x':
+        radix_ = Radix::Hex;
+        next_fmt();
+        break;
+      case 'd':
+        radix_ = Radix::Dec;
+        next_fmt();
+        break;
+      case 'b':
+        radix_ = Radix::Bin;
+        next_fmt();
+        break;
+      case 'o':
+        radix_ = Radix::Oct;
+        next_fmt();
+        break;
+      default:
+        break;
+    }
+  }
+
+  inline void reset_specification() {
+    radix_  = Radix::Dec;
+    align_  = Align::Right;
+    width_  = 0;
+    filler_ = ' ';
+  }
 
  public:
   template <typename... Args>

@@ -70,7 +70,13 @@ TEST_F(FmtTest, neg_int) {
 }
 
 TEST_F(FmtTest, int_arg_execess) {
-  constexpr const char *msg = "{} * {} ";
+  constexpr const char *msg = "{} * {}...";
+  fmt_.print(msg, 10, 20, 10 * 20);
+  EXPECT_EQ(mock_.to_string(), std::format(msg, 10, 20, 10 * 20));
+}
+
+TEST_F(FmtTest, int_arg_execess2) {
+  constexpr const char *msg = "{} * {}";
   fmt_.print(msg, 10, 20, 10 * 20);
   EXPECT_EQ(mock_.to_string(), std::format(msg, 10, 20, 10 * 20));
 }
@@ -91,6 +97,30 @@ TEST_F(FmtTest, hex_signed) {
   constexpr const char *msg = "{:x} * {} = {:x}...";
   fmt_.print(msg, -10, 20, -10 * 20);
   EXPECT_EQ(mock_.to_string(), std::format(msg, -10, 20, -10 * 20));
+}
+
+TEST_F(FmtTest, num_fill_width) {
+  constexpr const char *msg = "{:02x} * {:03} = {:04x}...";
+  fmt_.print(msg, 10, 20, 10 * 20);
+  EXPECT_EQ(mock_.to_string(), std::format(msg, 10, 20, 10 * 20));
+}
+
+TEST_F(FmtTest, string_fill_width) {
+  constexpr const char *msg = "{:*>8},  {:.>9}";
+  fmt_.print(msg, "hello", "world");
+  EXPECT_EQ(mock_.to_string(), std::format(msg, "hello", "world"));
+}
+
+TEST_F(FmtTest, string_fill_two_digits) {
+  constexpr const char *msg = "{:*>10},  {:.>29}";
+  fmt_.print(msg, "hello", "world");
+  EXPECT_EQ(mock_.to_string(), std::format(msg, "hello", "world"));
+}
+
+TEST_F(FmtTest, string_fill_shorter_than_output) {
+  constexpr const char *msg = "{:*>1},  {:.>2}";
+  fmt_.print(msg, "hello", "world");
+  EXPECT_EQ(mock_.to_string(), std::format(msg, "hello", "world"));
 }
 
 int main(int argc, char **argv) {
