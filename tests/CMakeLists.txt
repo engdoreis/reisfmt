@@ -10,7 +10,7 @@ FetchContent_MakeAvailable(googletest)
 
 add_compile_options(-O0 -g3)
 add_executable(${TEST_NAME}  main.cc )
-target_include_directories(${TEST_NAME} PRIVATE ../lib)
+target_include_directories(${TEST_NAME} PRIVATE ../include)
 target_link_libraries(${TEST_NAME} PRIVATE GTest::gtest_main)
 
 add_test(NAME Test_0 COMMAND ${TEST_NAME})
