@@ -190,10 +190,11 @@ class Fmt {
       }
     }
 
-    for (; tail > 0 && num > 0; --tail) {
-      buf[tail] = num % 10 + '0';
+    do {
+      buf[tail--] = num % 10 + '0';
       num /= 10;
-    }
+    }while(tail > 0 && num > 0);
+
 
     tail++;
     size_t len = SIZE - tail + head;
@@ -227,12 +228,22 @@ class Fmt {
         num         = 0 - num;
       }
     }
-    for (size_t i = 0; i < (sizeof(U) * 2); ++i) {
-      int mask = ((num >> shift) & 0xf);
-      if (mask < 10 && mask > 0) {
-        buf[head++] = ((num >> shift) & 0xf) + '0';
-      } else if (mask >= 10) {
-        buf[head++] = ((num >> shift) & 0xf) + 'a' - 10;
+
+    // Consume the leading zeros.
+    size_t i = 0;
+    for (; i < (sizeof(U) * 2) -1; ++i) {
+      if (((num >> shift) & 0xf) > 0) {
+        break;
+      } 
+      num <<= 4;
+    }
+
+    for (; i < (sizeof(U) * 2); ++i) {
+      int masked = ((num >> shift) & 0xf);
+      if (masked < 10 ) {
+        buf[head++] = masked + '0';
+      } else {
+        buf[head++] = masked + 'a' - 10;
       }
       num <<= 4;
     }

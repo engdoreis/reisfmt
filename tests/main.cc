@@ -13,7 +13,11 @@ struct IostreamMock {
     }
   }
 
-  std::string to_string() { return std::string(buf_.begin(), buf_.end()); }
+  inline std::string to_string() {
+    std::string res(buf_.begin(), buf_.end());
+    buf_.clear();
+    return res;
+  }
 };
 
 class FmtTest : public testing::Test {
@@ -95,14 +99,24 @@ TEST_F(FmtTest, hex_unsigned) {
 
 TEST_F(FmtTest, hex_signed) {
   constexpr const char *msg = "{:x} * {} = {:x}...";
-  fmt_.print(msg, -10, 20, -10 * 20);
-  EXPECT_EQ(mock_.to_string(), std::format(msg, -10, 20, -10 * 20));
+  int a, b;
+  for (int i = 0; i < 10; i++) {
+    a = -5 * i;
+    b = 7 * i;
+    fmt_.print(msg, a, b, a * b);
+    EXPECT_EQ(mock_.to_string(), std::format(msg, a, b, a * b));
+  }
 }
 
 TEST_F(FmtTest, num_fill_width) {
   constexpr const char *msg = "{:02x} * {:03} = {:04x}...";
-  fmt_.print(msg, 10, 20, 10 * 20);
-  EXPECT_EQ(mock_.to_string(), std::format(msg, 10, 20, 10 * 20));
+  unsigned int a, b;
+  for (int i = 0; i < 10; i++) {
+    a = 5 * i;
+    b = 5 * i;
+    fmt_.print(msg, a, b, a * b);
+    EXPECT_EQ(mock_.to_string(), std::format(msg, a, b, a * b));
+  }
 }
 
 TEST_F(FmtTest, string_fill_width) {
