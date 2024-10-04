@@ -160,6 +160,30 @@ TEST_F(FmtTest, bin_signed) {
   }
 }
 
+TEST_F(FmtTest, alternate_form) {
+  constexpr const char *msg = "{:#x} * {} + {:#d} = {:#b}";
+  unsigned int a, b, c;
+  for (int i = 0; i < 10; i++) {
+    a = 5 * i;
+    b = 7 * i;
+    c = 11 * i;
+    fmt_.print(msg, a, b, c, a * b + c);
+    EXPECT_EQ(mock_.to_string(), std::format(msg, a, b, c, a * b + c));
+  }
+}
+
+TEST_F(FmtTest, alternate_form_and_filler) {
+  constexpr const char *msg = "{:#08x} * {} + {:#04d} = {:#08b}";
+  unsigned int a, b, c;
+  for (int i = 0; i < 10; i++) {
+    a = 5 * i;
+    b = 7 * i;
+    c = 11 * i;
+    fmt_.print(msg, a, b, c, a * b + c);
+    EXPECT_EQ(mock_.to_string(), std::format(msg, a, b, c, a * b + c));
+  }
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
