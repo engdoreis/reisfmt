@@ -184,6 +184,17 @@ TEST_F(FmtTest, alternate_form_and_filler) {
   }
 }
 
+TEST_F(FmtTest, integer_max) {
+  constexpr const char *msg = "{:#08x} * {} + {:#04d} = {:#08b}";
+  unsigned int a            = 0xffffffff;
+  fmt_.print(msg, a, a, a, a);
+  EXPECT_EQ(mock_.to_string(), std::format(msg, a, a, a, a));
+
+  a = UINT32_MAX;
+  fmt_.print(msg, a, a, a, a);
+  EXPECT_EQ(mock_.to_string(), std::format(msg, a, a, a, a));
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
