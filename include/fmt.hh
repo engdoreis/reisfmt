@@ -65,13 +65,15 @@ class Fmt {
 
       size_t len = 0;
       switch (radix_) {
-        case Radix::Dec:
-          len = to_str(buf, first);
+        case Radix::Bin:
+          len = to_bit_str(buf, first);
           break;
         case Radix::Hex:
           len = to_hex_str(buf, first);
           break;
+        case Radix::Dec:
         default:
+          len = to_str(buf, first);
           break;
       };
 
@@ -253,8 +255,45 @@ class Fmt {
 
   template <size_t SIZE>
   static size_t to_hex_str(std::array<char, SIZE> &buf, std::string str) {
-    buf[0] = 0;
     return 0;
   }
+
+  template <size_t SIZE, typename U>
+    requires std::integral<U>
+  static inline size_t to_bit_str(std::array<char, SIZE> &buf, U num) {
+    assert(SIZE > sizeof(U) * 8 + 1);
+    constexpr U shift = (sizeof(U) * 8 - 1);
+
+    size_t head = 0;
+    if constexpr (std::signed_integral<U>) {
+      // This code won't be linked for unsigned U.
+      if (num < 0) {
+        buf[head++] = '-';
+        num         = 0 - num;
+      }
+    }
+
+    // Consume the leading zeros.
+    size_t i = 0;
+    for (; i < (sizeof(U) * 8) - 1; ++i) {
+      if(((num >> shift) & 0x1) ){
+        break;
+      }
+      num <<= 1;
+    }
+
+    for (; i < (sizeof(U) * 8); ++i) {
+      buf[head++] = ((num >> shift) & 0x1) + '0';
+      num <<= 1;
+    }
+    buf[head] = 0;
+    return head;
+  }
+
+  template <size_t SIZE>
+  static size_t to_bit_str(std::array<char, SIZE> &buf, std::string str) {
+    return 0;
+  }
+
 };
 };  // namespace reisfmt

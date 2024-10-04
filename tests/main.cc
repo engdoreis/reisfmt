@@ -137,6 +137,29 @@ TEST_F(FmtTest, string_fill_shorter_than_output) {
   EXPECT_EQ(mock_.to_string(), std::format(msg, "hello", "world"));
 }
 
+TEST_F(FmtTest, bin_unsigned) {
+  constexpr const char *msg = "{:x} * {} = {:b}";
+  unsigned int a, b;
+  for (int i = 0; i < 10; i++) {
+    a = 5 * i;
+    b = 7 * i;
+    fmt_.print(msg, a, b, a * b);
+    EXPECT_EQ(mock_.to_string(), std::format(msg, a, b, a * b));
+  }
+}
+
+TEST_F(FmtTest, bin_signed) {
+  constexpr const char *msg = "{:x} * {} = {:b}";
+
+  int a, b;
+  for (int i = 0; i < 10; i++) {
+    a = -5 * i;
+    b = 7 * i;
+    fmt_.print(msg, a, b, a * b);
+    EXPECT_EQ(mock_.to_string(), std::format(msg, a, b, a * b));
+  }
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
