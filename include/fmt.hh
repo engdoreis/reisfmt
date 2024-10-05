@@ -38,11 +38,14 @@ class Fmt {
   Fmt(T &device) : device(device) {};
 
  private:
-  inline char next_fmt(int step = 1) {
+  inline std::optional<char> next_fmt(int step = 1) {
+    if (fmt_size_ == 0) {
+      return std::nullopt;
+    }
     fmt_size_ -= step;
     auto res = *fmt_;
     fmt_ += step;
-    return res;
+    return std::optional{res};
   }
 
   inline char peek_fmt(int step = 1) { return *fmt_; }
@@ -60,10 +63,16 @@ class Fmt {
     if (fmt_ == nullptr || *fmt_ == 0) {
       return;
     }
+    auto find = [&](char c) {
+      std::optional<char> opt;
+      do {
+        opt = next_fmt();
+      } while (opt.has_value() && opt.value() != c);
+    };
     auto start = fmt_;
 
     // Find format start guard
-    while (next_fmt() != '{' && fmt_size_ > 0);
+    find('{');
     device.write(start, fmt_ - start - int(fmt_size_ > 0));
     if (fmt_size_ > 0) {
       parse_specification();
@@ -102,9 +111,7 @@ class Fmt {
           device.write(&filler_, sizeof(filler_));
         }
       }
-
-      // Find format end guard.
-      while (next_fmt() != '}');
+      find('}');
       format(rest...);
     }
   }
@@ -157,8 +164,10 @@ class Fmt {
   }
 
   inline void parse_width() {
-    while (std::isdigit(peek_fmt())) {
-      width_ = width_ * 10 + next_fmt() - '0';
+    char c;
+    while (std::isdigit((c = peek_fmt()))) {
+      width_ = width_ * 10 + c - '0';
+      next_fmt();
     }
   }
 

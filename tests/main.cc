@@ -216,6 +216,17 @@ TEST_F(FmtTest, alingment_center) {
   EXPECT_EQ(mock_.to_string(), std::format(msg, a));
 }
 
+TEST_F(FmtTest, missing_format_end_guard) {
+  constexpr const char *msg = "{:#x}, {:#x";
+  constexpr const char *msg2 = "{:#x, {:#x}";
+  unsigned int a            = 0xffffffff;
+  fmt_.print(msg, a, a);
+  EXPECT_EQ(mock_.to_string(), "0xffffffff, 0xffffffff");
+
+  fmt_.print(msg2, a, a);
+  EXPECT_EQ(mock_.to_string(), "0xffffffff");
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
