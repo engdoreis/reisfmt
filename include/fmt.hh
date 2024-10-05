@@ -64,8 +64,8 @@ class Fmt {
 
     // Find format start guard
     while (next_fmt() != '{' && fmt_size_ > 0);
+    device.write(start, fmt_ - start - int(fmt_size_ > 0));
     if (fmt_size_ > 0) {
-      device.write(start, fmt_ - start - 1);
       parse_specification();
 
       size_t len = 0;
@@ -106,8 +106,6 @@ class Fmt {
       // Find format end guard.
       while (next_fmt() != '}');
       format(rest...);
-    } else {
-      device.write(start, fmt_ - start);
     }
   }
 
