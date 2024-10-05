@@ -195,6 +195,27 @@ TEST_F(FmtTest, integer_max) {
   EXPECT_EQ(mock_.to_string(), std::format(msg, a, a, a, a));
 }
 
+TEST_F(FmtTest, alingment_right) {
+  constexpr const char *msg = "{:*>30x}";
+  unsigned int a            = 0xffffffff;
+  fmt_.print(msg, a);
+  EXPECT_EQ(mock_.to_string(), std::format(msg, a));
+}
+
+TEST_F(FmtTest, alingment_left) {
+  constexpr const char *msg = "{:*<30x}";
+  unsigned int a            = 0xffffffff;
+  fmt_.print(msg, a);
+  EXPECT_EQ(mock_.to_string(), std::format(msg, a));
+}
+
+TEST_F(FmtTest, alingment_center) {
+  constexpr const char *msg = "{:*^30x}";
+  unsigned int a            = 0xffffffff;
+  fmt_.print(msg, a);
+  EXPECT_EQ(mock_.to_string(), std::format(msg, a));
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

@@ -4,6 +4,8 @@
 #include <array>
 #include <algorithm>
 #include "cstring"
+#include "stdint.h"
+#include "stddef.h"
 
 namespace reisfmt {
 
@@ -84,12 +86,22 @@ class Fmt {
         device.write(prefix_, prefix_size_);
         width_ -= prefix_size_;
       }
-      if (width_ > len) {
-        for (int i = width_ - len; i > 0; --i) {
+      if ((align_ == Align::Center || align_ == Align::Right) && width_ > len) {
+        int diff = width_ - len;
+        diff     = align_ == Align::Center ? diff / 2 : diff;
+        width_ -= diff;
+        while (diff-- > 0) {
           device.write(&filler_, sizeof(filler_));
         }
       }
       device.write(buf.data(), len);
+
+      // align_ == Align::Left || Align::Center
+      if (width_ > len) {
+        while (width_-- > len) {
+          device.write(&filler_, sizeof(filler_));
+        }
+      }
 
       // Find format end guard.
       while (next_fmt() != '}');
