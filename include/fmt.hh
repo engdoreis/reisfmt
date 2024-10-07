@@ -213,6 +213,12 @@ class Fmt {
 
  public:
   template <typename... Args>
+  void println(const char *fmt, Args... args) {
+    print(fmt, args...);
+    device.write("\n", 1);
+  }
+
+  template <typename... Args>
   void print(const char *fmt, Args... args) {
     if (fmt) {
       fmt_ = fmt;

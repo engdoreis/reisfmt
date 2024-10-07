@@ -227,6 +227,13 @@ TEST_F(FmtTest, missing_format_end_guard) {
   EXPECT_EQ(mock_.to_string(), "0xffffffff");
 }
 
+TEST_F(FmtTest, println) {
+  constexpr const char *msg = "Hello {} {}";
+  std::string arg("World");
+  fmt_.println(msg, arg, 42);
+  EXPECT_EQ(mock_.to_string(), std::format(msg, arg, 42) + "\n");
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
