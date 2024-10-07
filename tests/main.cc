@@ -41,10 +41,10 @@ TEST_F(FmtTest, null_fmt) {
 
 TEST_F(FmtTest, long_arg_str) {
   constexpr const char *msg = "Hello {} !!";
-  std::string arg64         = std::format("{:*^64}", "world");
-  fmt_.print(msg, arg64);
-  std::string arg63 = std::format("{:*^63}", "world");
-  EXPECT_EQ(mock_.to_string(), std::format(msg, arg63));
+  std::string arg65         = std::format("{:*>65}", "world");
+  fmt_.print(msg, arg65.c_str());
+  std::string arg64 = std::format("{:*>64}", "worl");
+  EXPECT_EQ(mock_.to_string(), std::format(msg, arg64));
 }
 
 TEST_F(FmtTest, string_arg) {
@@ -217,9 +217,9 @@ TEST_F(FmtTest, alingment_center) {
 }
 
 TEST_F(FmtTest, missing_format_end_guard) {
-  constexpr const char *msg = "{:#x}, {:#x";
+  constexpr const char *msg  = "{:#x}, {:#x";
   constexpr const char *msg2 = "{:#x, {:#x}";
-  unsigned int a            = 0xffffffff;
+  unsigned int a             = 0xffffffff;
   fmt_.print(msg, a, a);
   EXPECT_EQ(mock_.to_string(), "0xffffffff, 0xffffffff");
 
@@ -230,7 +230,7 @@ TEST_F(FmtTest, missing_format_end_guard) {
 TEST_F(FmtTest, println) {
   constexpr const char *msg = "Hello {} {}";
   std::string arg("World");
-  fmt_.println(msg, arg, 42);
+  fmt_.println(msg, arg.c_str(), 42);
   EXPECT_EQ(mock_.to_string(), std::format(msg, arg, 42) + "\n");
 }
 
