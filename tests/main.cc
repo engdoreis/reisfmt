@@ -23,7 +23,7 @@ struct IostreamMock {
 class FmtTest : public testing::Test {
  public:
   IostreamMock mock_ = IostreamMock();
-  reisfmt::Fmt<IostreamMock, 64> fmt_;
+  reisfmt::Fmt<IostreamMock> fmt_;
 
   FmtTest() : fmt_(mock_) {}
 };
@@ -186,11 +186,11 @@ TEST_F(FmtTest, alternate_form_and_filler) {
 
 TEST_F(FmtTest, integer_max) {
   constexpr const char *msg = "{:#08x} * {} + {:#04d} = {:#08b}";
-  unsigned int a            = 0xffffffff;
+  unsigned long int a       = 0xffffffff;
   fmt_.print(msg, a, a, a, a);
   EXPECT_EQ(mock_.to_string(), std::format(msg, a, a, a, a));
 
-  a = UINT32_MAX;
+  a = std::numeric_limits<uint64_t>::max();
   fmt_.print(msg, a, a, a, a);
   EXPECT_EQ(mock_.to_string(), std::format(msg, a, a, a, a));
 }

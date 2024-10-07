@@ -3,6 +3,7 @@
 #include <concepts>
 #include <array>
 #include <algorithm>
+#include <limits>
 #include "cstring"
 #include "stdint.h"
 #include "stddef.h"
@@ -14,11 +15,11 @@ concept Writeable = requires(T t, const char *buf, size_t n) {
   { t.write(buf, n) } -> std::same_as<void>;
 };
 
-template <Writeable T, size_t N>
+template <Writeable T>
 class Fmt {
  private:
   T &device;
-  std::array<char, N> buf;
+  std::array<char, sizeof(uint64_t) * 8> buf;
 
   const char *fmt_ = nullptr;
   size_t fmt_size_ = 0;
@@ -222,9 +223,21 @@ class Fmt {
     }
   }
 
+  template <typename U>
+  // requires std::integral<U>
+  static constexpr U decimal_digits(U number) {
+    U digits = 0;
+    do {
+      number /= 10;
+      digits++;
+    } while (number);
+    return digits;
+  }
+
   template <size_t SIZE, typename U>
     requires std::integral<U>
   static size_t to_str(std::array<char, SIZE> &buf, U num) {
+    static_assert(SIZE >= decimal_digits(std::numeric_limits<U>::max()));
     size_t head = 0;
     size_t tail = SIZE - 1;
     if constexpr (std::signed_integral<U>) {
@@ -246,7 +259,6 @@ class Fmt {
       buf[head + i] = buf[tail + i];
     }
 
-    buf[len] = 0;
     return len;
   }
 
@@ -254,14 +266,13 @@ class Fmt {
   static size_t to_str(std::array<char, SIZE> &buf, const std::string str) {
     auto len = std::min(buf.size() - 1, str.length());
     std::copy_n(str.begin(), len, buf.begin());
-    buf[len] = 0;
     return len;
   }
 
   template <size_t SIZE, typename U>
     requires std::integral<U>
   static inline size_t to_hex_str(std::array<char, SIZE> &buf, U num) {
-    assert(SIZE > sizeof(U) * 2 + 1);
+    static_assert(SIZE >= sizeof(U) * 2);
     constexpr U shift = (sizeof(U) * 8 - 4);
 
     size_t head = 0;
@@ -291,7 +302,6 @@ class Fmt {
       }
       num <<= 4;
     }
-    buf[head] = 0;
     return head;
   }
 
@@ -303,7 +313,7 @@ class Fmt {
   template <size_t SIZE, typename U>
     requires std::integral<U>
   static inline size_t to_bit_str(std::array<char, SIZE> &buf, U num) {
-    assert(SIZE > sizeof(U) * 8 + 1);
+    static_assert(SIZE >= sizeof(U) * 8);
     constexpr U shift = (sizeof(U) * 8 - 1);
 
     size_t head = 0;
@@ -328,7 +338,6 @@ class Fmt {
       buf[head++] = ((num >> shift) & 0x1) + '0';
       num <<= 1;
     }
-    buf[head] = 0;
     return head;
   }
 
