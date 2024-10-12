@@ -1,6 +1,7 @@
 
 #pragma once
 #include <concepts>
+#include <type_traits>
 #include <array>
 #include <algorithm>
 #include <limits>
@@ -23,6 +24,18 @@ class Fmt;
 
 template <Writeable T, typename U>
 struct Formatter;
+
+template <typename T, typename F>
+concept Printable = requires(T t, Fmt<F> &fmt) {
+  { t.print(fmt) } -> std::same_as<void>;
+};
+
+// This specialization allows types to implement `Printable` in order be formated.
+template <Writeable T, typename U>
+  requires std::is_class_v<U>
+struct Formatter<T, U> {
+  static void print(Fmt<T> &fmt, U &obj) { obj.print(fmt); }
+};
 
 template <Writeable T, typename U>
   requires std::integral<U>

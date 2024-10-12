@@ -241,20 +241,33 @@ struct Circle {
   int x;
   int y;
 };
-
 namespace reisfmt {
 template <typename T>
 struct Formatter<T, Circle> {
   static inline void print(Fmt<T> &fmt, Circle &circ) {
-    fmt.print("Circle: posx: {}, posy: {}, r: {}", circ.x, circ.y, circ.radius);
+    fmt.print("FORMATTER -> Circle: posx: {}, posy: {}, r: {}", circ.x, circ.y, circ.radius);
   }
 };
 }  // namespace reisfmt
-
-TEST_F(FmtTest, extended_types) {
+TEST_F(FmtTest, formatter_extended_types) {
   constexpr const char *msg = "Print Circle: {}";
   fmt_.println(msg, Circle{10, -1, 8});
-  EXPECT_EQ(mock_.to_string(), "Print Circle: Circle: posx: -1, posy: 8, r: 10\n");
+  EXPECT_EQ(mock_.to_string(), "Print Circle: FORMATTER -> Circle: posx: -1, posy: 8, r: 10\n");
+}
+
+// Implementing Printable.
+struct Memory {
+  size_t addr;
+  size_t size;
+  template <typename T>
+  inline void print(reisfmt::Fmt<T> &fmt) {
+    fmt.print("PRINTABLE -> Memory: addr: {:#x}, size: {}", addr, size);
+  }
+};
+TEST_F(FmtTest, printable_extended_types) {
+  constexpr const char *msg = "Print memory: {}";
+  fmt_.println(msg, Memory{0x1000'0000, 1024 * 256});
+  EXPECT_EQ(mock_.to_string(), "Print memory: PRINTABLE -> Memory: addr: 0x10000000, size: 262144\n");
 }
 
 int main(int argc, char **argv) {
