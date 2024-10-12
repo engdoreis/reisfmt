@@ -17,15 +17,88 @@ concept Writeable = requires(T t, const char *buf, size_t n) {
   { t.write(buf, n) } -> std::same_as<void>;
 };
 
+// Foward declaration.
+template <Writeable T>
+class Fmt;
+
+template <Writeable T, typename U>
+struct Formatter;
+
+template <Writeable T, typename U>
+  requires std::integral<U>
+struct Formatter<T, U> {
+  static void print(Fmt<T> &fmt, U obj) {
+    size_t len = 0;
+    switch (fmt.spec.radix_) {
+      case Spec::Radix::Bin:
+        len = to_bit_str(fmt.buf, obj);
+        break;
+      case Spec::Radix::Hex:
+        len = to_hex_str(fmt.buf, obj);
+        break;
+      case Spec::Radix::Dec:
+      default:
+        len = to_str(fmt.buf, obj);
+        break;
+    };
+
+    StrIterator it(fmt.buf.data(), len);
+    Formatter<T, StrIterator>::print(fmt, it);
+  }
+};
+
+template <Writeable T>
+struct Formatter<T, StrIterator> {
+  static inline void print(Fmt<T> &fmt, StrIterator &it) {
+    if (fmt.spec.has_prefix_) {
+      fmt.device.write(fmt.spec.prefix_, fmt.spec.prefix_size_);
+      fmt.spec.width_ -= fmt.spec.prefix_size_;
+    }
+    if ((fmt.spec.align_ == Spec::Align::Center || fmt.spec.align_ == Spec::Align::Right) &&
+        fmt.spec.width_ > it.size_) {
+      int diff = fmt.spec.width_ - it.size_;
+      diff     = fmt.spec.align_ == Spec::Align::Center ? diff / 2 : diff;
+      fmt.spec.width_ -= diff;
+      while (diff-- > 0) {
+        fmt.device.write(&fmt.spec.filler_, sizeof(fmt.spec.filler_));
+      }
+    }
+
+    fmt.device.write(it.head_, it.size_);
+
+    // align_ == Spec::Align::Left || Spec::Align::Center
+    if (fmt.spec.width_ > it.size_) {
+      while (fmt.spec.width_-- > it.size_) {
+        fmt.device.write(&fmt.spec.filler_, sizeof(fmt.spec.filler_));
+      }
+    }
+  }
+};
+
+template <Writeable T>
+struct Formatter<T, const char *> {
+  static inline void print(Fmt<T> &fmt, const char *str) {
+    StrIterator it(str);
+    Formatter<T, StrIterator>::print(fmt, it);
+  }
+};
+
+template <Writeable T>
+struct Formatter<T, std::basic_string<char>> {
+  static inline void print(Fmt<T> &fmt, const std::string &str) {
+    StrIterator it(str.c_str(), str.length());
+    Formatter<T, StrIterator>::print(fmt, it);
+  }
+};
+
 template <Writeable T>
 class Fmt {
- private:
+ public:
   T &device;
   std::array<char, sizeof(uint64_t) * 8> buf;
   StrIterator *it_;
   Spec spec;
 
- public:
   Fmt(T &device) : device(device) {};
 
  private:
@@ -50,40 +123,12 @@ class Fmt {
     if (it_->size_ > 0) {
       spec.from_str(*it_);
 
-      size_t len = 0;
-      switch (spec.radix_) {
-        case Spec::Radix::Bin:
-          len = to_bit_str(buf, first);
-          break;
-        case Spec::Radix::Hex:
-          len = to_hex_str(buf, first);
-          break;
-        case Spec::Radix::Dec:
-        default:
-          len = to_str(buf, first);
-          break;
-      };
+      // The formatter can be extented for custom types, se the context is saved to allow the custom formatter to
+      // recursively call this function and change the context.
+      auto it = it_;
+      Formatter<T, U>::print(*this, first);
+      it_ = it;
 
-      if (spec.has_prefix_) {
-        device.write(spec.prefix_, spec.prefix_size_);
-        spec.width_ -= spec.prefix_size_;
-      }
-      if ((spec.align_ == Spec::Align::Center || spec.align_ == Spec::Align::Right) && spec.width_ > len) {
-        int diff = spec.width_ - len;
-        diff     = spec.align_ == Spec::Align::Center ? diff / 2 : diff;
-        spec.width_ -= diff;
-        while (diff-- > 0) {
-          device.write(&spec.filler_, sizeof(spec.filler_));
-        }
-      }
-      device.write(buf.data(), len);
-
-      // align_ == Spec::Align::Left || Spec::Align::Center
-      if (spec.width_ > len) {
-        while (spec.width_-- > len) {
-          device.write(&spec.filler_, sizeof(spec.filler_));
-        }
-      }
       it_->find('}');
       format(rest...);
     }
@@ -106,4 +151,5 @@ class Fmt {
     }
   }
 };
+
 };  // namespace reisfmt

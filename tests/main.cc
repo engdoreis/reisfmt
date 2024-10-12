@@ -1,9 +1,10 @@
 #include <gtest/gtest.h>
-#include "fmt.hh"
 #include <iostream>
 #include <cstring>
 #include <string>
 #include <format>
+
+#include "fmt.hh"
 
 struct IostreamMock {
   std::vector<char> buf_;
@@ -41,10 +42,10 @@ TEST_F(FmtTest, null_fmt) {
 
 TEST_F(FmtTest, long_arg_str) {
   constexpr const char *msg = "Hello {} !!";
-  std::string arg65         = std::format("{:*>65}", "world");
-  fmt_.print(msg, arg65.c_str());
-  std::string arg64 = std::format("{:*>64}", "worl");
-  EXPECT_EQ(mock_.to_string(), std::format(msg, arg64));
+  std::string arg1          = std::format("{:*>100}", "world");
+  fmt_.print(msg, arg1.c_str());
+  std::string arg2 = std::format("{:*>100}", "world");
+  EXPECT_EQ(mock_.to_string(), std::format(msg, arg2));
 }
 
 TEST_F(FmtTest, string_arg) {
@@ -232,6 +233,28 @@ TEST_F(FmtTest, println) {
   std::string arg("World");
   fmt_.println(msg, arg.c_str(), 42);
   EXPECT_EQ(mock_.to_string(), std::format(msg, arg, 42) + "\n");
+}
+
+// Extending the format library for custom types.
+struct Circle {
+  int radius;
+  int x;
+  int y;
+};
+
+namespace reisfmt {
+template <typename T>
+struct Formatter<T, Circle> {
+  static inline void print(Fmt<T> &fmt, Circle &circ) {
+    fmt.print("Circle: posx: {}, posy: {}, r: {}", circ.x, circ.y, circ.radius);
+  }
+};
+}  // namespace reisfmt
+
+TEST_F(FmtTest, extended_types) {
+  constexpr const char *msg = "Print Circle: {}";
+  fmt_.println(msg, Circle{10, -1, 8});
+  EXPECT_EQ(mock_.to_string(), "Print Circle: Circle: posx: -1, posy: 8, r: 10\n");
 }
 
 int main(int argc, char **argv) {

@@ -45,22 +45,6 @@ inline size_t to_str(std::array<char, SIZE> &buf, U num) {
   return len;
 }
 
-template <size_t SIZE>
-inline size_t to_str(std::array<char, SIZE> &buf, const char *str) {
-  size_t len = 0;
-  while (*str != 0 && len < buf.size()) {
-    buf[len++] = *str++;
-  }
-  return len;
-}
-
-template <size_t SIZE>
-inline size_t to_str(std::array<char, SIZE> &buf, const std::string str) {
-  auto len = std::min(buf.size() - 1, str.length());
-  std::copy_n(str.begin(), len, buf.begin());
-  return len;
-}
-
 template <size_t SIZE, typename U>
   requires std::integral<U>
 inline size_t to_hex_str(std::array<char, SIZE> &buf, U num) {
@@ -97,16 +81,6 @@ inline size_t to_hex_str(std::array<char, SIZE> &buf, U num) {
   return head;
 }
 
-template <size_t SIZE>
-inline size_t to_hex_str(std::array<char, SIZE> &buf, const char *str) {
-  return 0;
-}
-
-template <size_t SIZE>
-inline size_t to_hex_str(std::array<char, SIZE> &buf, std::string str) {
-  return 0;
-}
-
 template <size_t SIZE, typename U>
   requires std::integral<U>
 inline size_t to_bit_str(std::array<char, SIZE> &buf, U num) {
@@ -136,15 +110,5 @@ inline size_t to_bit_str(std::array<char, SIZE> &buf, U num) {
     num <<= 1;
   }
   return head;
-}
-
-template <size_t SIZE>
-inline size_t to_bit_str(std::array<char, SIZE> &buf, const char *str) {
-  return 0;
-}
-
-template <size_t SIZE>
-inline size_t to_bit_str(std::array<char, SIZE> &buf, std::string str) {
-  return 0;
 }
 };  // namespace reisfmt
