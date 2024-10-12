@@ -48,13 +48,11 @@ struct Spec {
   enum class Radix { Bin = 2, Oct = 8, Dec = 10, Hex = 16 };
   enum class Align { Left, Right, Center };
 
-  Radix radix_        = Radix::Dec;
-  Align align_        = Align::Right;
-  uint32_t width_     = 0;
-  char filler_        = ' ';
-  bool has_prefix_    = false;
-  const char *prefix_ = "0";
-  size_t prefix_size_ = 1;
+  Radix radix_                       = Radix::Dec;
+  Align align_                       = Align::Right;
+  uint32_t width_                    = 0;
+  char filler_                       = ' ';
+  std::optional<StrIterator> prefix_ = std::nullopt;
 
   void from_str(StrIterator &it) {
     reset();
@@ -98,7 +96,7 @@ struct Spec {
 
   inline void parse_alternate_mode(StrIterator &it) {
     if (it.peek() == '#') {
-      has_prefix_ = true;
+      prefix_ = std::optional{StrIterator{"0", 1}};
       it.next();
     }
   }
@@ -112,29 +110,33 @@ struct Spec {
   }
 
   inline void parse_type(StrIterator &it) {
+    auto set_prefix = [&](const char *str, size_t size) {
+      // If the function `alternate mode` is enabled.
+      if (prefix_.has_value()) {
+        prefix_ = std::optional{StrIterator{str, size}};
+      }
+    };
+
     switch (it.peek()) {
       case 'x':
         radix_ = Radix::Hex;
         it.next();
-        prefix_      = "0x";
-        prefix_size_ = 2;
+        set_prefix("0x", 2);
         break;
       case 'd':
         radix_ = Radix::Dec;
         it.next();
-        has_prefix_ = false;
+        prefix_ = std::nullopt;
         break;
       case 'b':
         radix_ = Radix::Bin;
         it.next();
-        prefix_      = "0b";
-        prefix_size_ = 2;
+        set_prefix("0b", 2);
         break;
       case 'o':
         radix_ = Radix::Oct;
         it.next();
-        prefix_      = "0";
-        prefix_size_ = 1;
+        set_prefix("0", 1);
         break;
       default:
         break;
@@ -142,12 +144,11 @@ struct Spec {
   }
 
   inline void reset() {
-    radix_       = Radix::Dec;
-    align_       = Align::Right;
-    width_       = 0;
-    filler_      = ' ';
-    has_prefix_  = false;
-    prefix_size_ = 0;
+    radix_  = Radix::Dec;
+    align_  = Align::Right;
+    width_  = 0;
+    filler_ = ' ';
+    prefix_ = std::nullopt;
   }
 };
 };  // namespace reisfmt

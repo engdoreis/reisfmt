@@ -49,28 +49,27 @@ struct Formatter<T, U> {
 
 template <Writeable T>
 struct Formatter<T, StrIterator> {
-  static inline void print(Fmt<T> &fmt, StrIterator &it) {
-    if (fmt.spec.has_prefix_) {
-      fmt.device.write(fmt.spec.prefix_, fmt.spec.prefix_size_);
-      fmt.spec.width_ -= fmt.spec.prefix_size_;
+  static inline void print(Fmt<T> &fmt, StrIterator &text) {
+    auto &spec = fmt.spec;
+    if (auto opt = spec.prefix_) {
+      StrIterator prefix = *opt;
+      fmt.device.write(prefix.head_, prefix.size_);
+      spec.width_ -= prefix.size_;
     }
-    if ((fmt.spec.align_ == Spec::Align::Center || fmt.spec.align_ == Spec::Align::Right) &&
-        fmt.spec.width_ > it.size_) {
-      int diff = fmt.spec.width_ - it.size_;
-      diff     = fmt.spec.align_ == Spec::Align::Center ? diff / 2 : diff;
-      fmt.spec.width_ -= diff;
+
+    if ((spec.align_ == Spec::Align::Center || spec.align_ == Spec::Align::Right) && spec.width_ > text.size_) {
+      int diff = (spec.width_ - text.size_) / (1 + (spec.align_ == Spec::Align::Center));
+      spec.width_ -= diff;
       while (diff-- > 0) {
-        fmt.device.write(&fmt.spec.filler_, sizeof(fmt.spec.filler_));
+        fmt.device.write(&spec.filler_, sizeof(spec.filler_));
       }
     }
 
-    fmt.device.write(it.head_, it.size_);
+    fmt.device.write(text.head_, text.size_);
 
     // align_ == Spec::Align::Left || Spec::Align::Center
-    if (fmt.spec.width_ > it.size_) {
-      while (fmt.spec.width_-- > it.size_) {
-        fmt.device.write(&fmt.spec.filler_, sizeof(fmt.spec.filler_));
-      }
+    while (spec.width_-- > text.size_) {
+      fmt.device.write(&spec.filler_, sizeof(spec.filler_));
     }
   }
 };
@@ -78,16 +77,16 @@ struct Formatter<T, StrIterator> {
 template <Writeable T>
 struct Formatter<T, const char *> {
   static inline void print(Fmt<T> &fmt, const char *str) {
-    StrIterator it(str);
-    Formatter<T, StrIterator>::print(fmt, it);
+    StrIterator text(str);
+    Formatter<T, StrIterator>::print(fmt, text);
   }
 };
 
 template <Writeable T>
 struct Formatter<T, std::basic_string<char>> {
   static inline void print(Fmt<T> &fmt, const std::string &str) {
-    StrIterator it(str.c_str(), str.length());
-    Formatter<T, StrIterator>::print(fmt, it);
+    StrIterator text(str.c_str(), str.length());
+    Formatter<T, StrIterator>::print(fmt, text);
   }
 };
 
@@ -106,7 +105,7 @@ class Fmt {
   void format() {
     if (it_ && it_->peek()) {
       device.write(it_->head_, it_->size_);
-      it_ = nullptr;
+      it_->next(it_->size_);
     }
   }
 
