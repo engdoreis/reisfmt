@@ -48,6 +48,41 @@ int main() {
   return 0;
 }
 ```
+## How to extend the print for a custom type
+Custom types can be printed in two different ways.
+The first option and recommended in most cases is to implement the `concept Printable` for the type.
+```cpp
+struct Memory {
+  size_t addr;
+  size_t size;
+
+  // Printable concept
+  template <typename T>
+  inline void print(reisfmt::Fmt<T> &fmt) {
+    fmt.print("Memory: addr: {:#x}, size: {}", addr, size);
+  }
+};
+```
+The second option is more verbose and may be needed in some cases where the type is defined by an external library. Here we specialize the struct `Formatter` for the desired type.
+```cpp
+struct Memory {
+  size_t addr;
+  size_t size;
+};
+
+namespace reisfmt {
+template <typename T>
+struct Formatter<T, Memory> {
+  static inline void print(Fmt<T> &fmt, Memory &obj) {
+    fmt.print("Memory: addr: {:#x}, size: {}", obj.addr, obj.size);
+  }
+};
+}
+```
+Now you can print the `struct Memory` using the `fmt` library.
+```cpp
+  fmt_.println("{}", Memory{0x1000'0000, 1024 * 256});
+```
 
 ## Formating specification
 This library follows the libc++ format specification defined [here](https://en.cppreference.com/w/cpp/utility/format/spec).
