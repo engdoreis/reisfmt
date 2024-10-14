@@ -1,8 +1,10 @@
 # reisfmt
 This is a tiny implementation, header only of the c++23 std::print for embedded systems.
-It only depend on some headers of the standard lib.
+It only depends on some headers of the standard lib.
 
-## How to download using CMake
+This implementation is heavily based on c++20 features. So you need a compiler that support the features: Concepts.
+ 
+## How to pull using the CMake dependency manager
 ```Cmake
 <!-- CMakelist.txt -->
 cmake_minimum_required(VERSION 3.13)
@@ -48,9 +50,10 @@ int main() {
   return 0;
 }
 ```
-## How to extend the print for a custom type
-Custom types can be printed in two different ways.
-The first option and recommended in most cases is to implement the `concept Printable` for the type.
+
+## How to extend the print function for custom types
+The print function can be extended to print custom types in two different ways.
+The first option is recommended in most cases consist in implementing the `concept Printable` for the desired type.
 ```cpp
 struct Memory {
   size_t addr;
@@ -84,12 +87,12 @@ Now you can print the `struct Memory` using the `fmt` library.
   fmt_.println("{}", Memory{0x1000'0000, 1024 * 256});
 ```
 
-## Formating specification
-This library follows the libc++ format specification defined [here](https://en.cppreference.com/w/cpp/utility/format/spec).
+## Formatting specification
+This library follows the c++  standard library format specification defined [here](https://en.cppreference.com/w/cpp/utility/format/spec).
 
-The following features above from the specifications are implemented:
+The following features below from the specification are implemented:
 
-|Spec|Implmented|
+|Spec|Implemented|
 |-|-|
 |fill-and-align|yes|
 |sign|no|
@@ -99,7 +102,7 @@ The following features above from the specifications are implemented:
 |locale|no|
 |type| See below|
 
-|Type|Implmemented|
+|Type|Implememented|
 |-|-|
 |d|yes|
 |b|yes|
