@@ -1,27 +1,16 @@
 
 #pragma once
-#include "stdint.h"
-#include "stddef.h"
+#include <stdint.h>
+#include <stddef.h>
 
 namespace reisfmt {
 struct StrIterator {
   const char *head_ = nullptr;
   size_t size_      = 0;
 
-  StrIterator(const char *str) {
-    head_ = str;
-    for (size_ = 0; str[size_] != 0; size_++);
-  }
-
-  StrIterator(const char *start, const char *end) {
-    head_ = start;
-    size_ = end - start;
-  }
-
-  StrIterator(const char *start, size_t size) {
-    head_ = start;
-    size_ = size;
-  }
+  StrIterator(const char *str) : head_(str) { for (size_ = 0; str[size_] != 0; size_++); }
+  StrIterator(const char *start, const char *end) : head_(start), size_(end - start) {}
+  StrIterator(const char *start, size_t size) : head_(start), size_(size) {}
 
   inline std::optional<char> next(int step = 1) {
     if (size_ == 0) {
@@ -68,16 +57,13 @@ struct Spec {
   inline void parse_fill_and_align(StrIterator &it) {
     char align = '>';
     if (it.peek() == '<' || it.peek() == '>' || it.peek() == '^') {
-      align   = it.peek();
+      align   = *it.next();
       filler_ = ' ';
-      it.next();
     } else if (it.peek(1) == '<' || it.peek(1) == '>' || it.peek(1) == '^') {
-      align   = it.peek(1);
-      filler_ = it.peek();
-      it.next(2);
+      filler_ = *it.next();
+      align   = *it.next();
     } else if (std::isdigit(it.peek(1))) {
-      filler_ = it.peek();
-      it.next();
+      filler_ = *it.next();
     }
 
     switch (align) {
@@ -102,16 +88,14 @@ struct Spec {
   }
 
   inline void parse_width(StrIterator &it) {
-    char c;
-    while (std::isdigit((c = it.peek()))) {
-      width_ = width_ * 10 + c - '0';
-      it.next();
+    while (std::isdigit((it.peek()))) {
+      width_ = width_ * 10 + *it.next() - '0';
     }
   }
 
   inline void parse_type(StrIterator &it) {
     auto set_prefix = [&](const char *str, size_t size) {
-      // If the function `alternate mode` is enabled.
+      // If the function `alternate mode`(#) is enabled.
       if (prefix_.has_value()) {
         prefix_ = std::optional{StrIterator{str, size}};
       }

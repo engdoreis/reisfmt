@@ -2,8 +2,7 @@
 #pragma once
 #include <array>
 #include <limits>
-#include "stdint.h"
-#include "stddef.h"
+#include <stddef.h>
 
 namespace reisfmt {
 
@@ -61,17 +60,18 @@ inline size_t to_hex_str(std::array<char, SIZE> &buf, U num) {
   }
 
   // Consume the leading zeros.
-  size_t i = 0;
-  for (; i < (sizeof(U) * 2) - 1; ++i) {
+  size_t i = sizeof(U) * 2;
+  for (; i > 1; --i) {
     if (((num >> shift) & 0xf) > 0) {
       break;
     }
     num <<= 4;
   }
 
-  for (; i < (sizeof(U) * 2); ++i) {
+  // Stringify the valid nibbles.
+  for (; i > 0; --i) {
     int masked = ((num >> shift) & 0xf);
-    if (masked < 10) {
+    if (masked < 0xa) {
       buf[head++] = masked + '0';
     } else {
       buf[head++] = masked + 'a' - 10;
@@ -97,15 +97,15 @@ inline size_t to_bit_str(std::array<char, SIZE> &buf, U num) {
   }
 
   // Consume the leading zeros.
-  size_t i = 0;
-  for (; i < (sizeof(U) * 8) - 1; ++i) {
+  size_t i = sizeof(U) * 8;
+  for (; i > 1; --i) {
     if (((num >> shift) & 0x1)) {
       break;
     }
     num <<= 1;
   }
-
-  for (; i < (sizeof(U) * 8); ++i) {
+  // Stringify the valid bits.
+  for (; i > 0; --i) {
     buf[head++] = ((num >> shift) & 0x1) + '0';
     num <<= 1;
   }

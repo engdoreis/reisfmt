@@ -3,10 +3,8 @@
 #include <concepts>
 #include <type_traits>
 #include <array>
-#include <algorithm>
-#include <limits>
-#include "stdint.h"
-#include "stddef.h"
+#include <stdint.h>
+#include <stddef.h>
 
 #include "to_string.hh"
 #include "spec.hh"
@@ -22,6 +20,7 @@ concept Writeable = requires(T t, const char *buf, size_t n) {
 template <Writeable T>
 class Fmt;
 
+// Foward declaration.
 template <Writeable T, typename U>
 struct Formatter;
 
@@ -30,7 +29,7 @@ concept Printable = requires(T t, Fmt<F> &fmt) {
   { t.print(fmt) } -> std::same_as<void>;
 };
 
-// This specialization allows types to implement `Printable` in order be formated.
+// This specialization allows types to implement `Printable` in order extend the print function.
 template <Writeable T, typename U>
   requires std::is_class_v<U>
 struct Formatter<T, U> {
@@ -40,18 +39,18 @@ struct Formatter<T, U> {
 template <Writeable T, typename U>
   requires std::integral<U>
 struct Formatter<T, U> {
-  static void print(Fmt<T> &fmt, U obj) {
+  static void print(Fmt<T> &fmt, U num) {
     size_t len = 0;
     switch (fmt.spec.radix_) {
       case Spec::Radix::Bin:
-        len = to_bit_str(fmt.buf, obj);
+        len = to_bit_str(fmt.buf, num);
         break;
       case Spec::Radix::Hex:
-        len = to_hex_str(fmt.buf, obj);
+        len = to_hex_str(fmt.buf, num);
         break;
       case Spec::Radix::Dec:
       default:
-        len = to_str(fmt.buf, obj);
+        len = to_str(fmt.buf, num);
         break;
     };
 
@@ -64,7 +63,7 @@ template <Writeable T>
 struct Formatter<T, StrIterator> {
   static inline void print(Fmt<T> &fmt, StrIterator &text) {
     auto &spec = fmt.spec;
-    if (auto opt = spec.prefix_) {
+    if (auto opt = spec.prefix_) {  // Is there a formating modifier(#)?
       StrIterator prefix = *opt;
       fmt.device.write(prefix.head_, prefix.size_);
       spec.width_ -= prefix.size_;
@@ -78,6 +77,7 @@ struct Formatter<T, StrIterator> {
       }
     }
 
+    // Print the formatted type.
     fmt.device.write(text.head_, text.size_);
 
     // align_ == Spec::Align::Left || Spec::Align::Center
@@ -128,15 +128,14 @@ class Fmt {
       return;
     }
     auto start = it_->head_;
-
-    // Find format start guard
-    auto end = it_->find('{');
+    auto end   = it_->find('{');
+    // Print the string preceding the format guard.
     device.write(start, end - start - int(it_->size_ > 0));
-    if (it_->size_ > 0) {
+    if (it_->size_ > 0) {  // Has the format guard been found?
       spec.from_str(*it_);
 
-      // The formatter can be extented for custom types, se the context is saved to allow the custom formatter to
-      // recursively call this function and change the context.
+      // The formatter can be extented for custom types, so the context is saved to allow the custom formatter to
+      // recursively call this function.
       auto it = it_;
       Formatter<T, U>::print(*this, first);
       it_ = it;
