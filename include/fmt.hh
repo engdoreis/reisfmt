@@ -149,7 +149,7 @@ class Fmt {
   template <typename... Args>
   void println(const char *fmt, Args... args) {
     print(fmt, args...);
-    device.write("\n", 1);
+    device.write("\r\n", 2);
   }
 
   template <typename... Args>
