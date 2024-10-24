@@ -232,7 +232,7 @@ TEST_F(FmtTest, println) {
   constexpr const char *msg = "Hello {} {}";
   std::string arg("World");
   fmt_.println(msg, arg.c_str(), 42);
-  EXPECT_EQ(mock_.to_string(), std::format(msg, arg, 42) + "\n");
+  EXPECT_EQ(mock_.to_string(), std::format(msg, arg, 42) + "\r\n");
 }
 
 // Extending the format library for custom types.
@@ -252,7 +252,7 @@ struct Formatter<T, Circle> {
 TEST_F(FmtTest, formatter_extended_types) {
   constexpr const char *msg = "Print Circle: {}";
   fmt_.println(msg, Circle{10, -1, 8});
-  EXPECT_EQ(mock_.to_string(), "Print Circle: FORMATTER -> Circle: posx: -1, posy: 8, r: 10\n");
+  EXPECT_EQ(mock_.to_string(), "Print Circle: FORMATTER -> Circle: posx: -1, posy: 8, r: 10\r\n");
 }
 
 // Implementing Printable.
@@ -267,7 +267,7 @@ struct Memory {
 TEST_F(FmtTest, printable_extended_types) {
   constexpr const char *msg = "Print memory: {}";
   fmt_.println(msg, Memory{0x1000'0000, 1024 * 256});
-  EXPECT_EQ(mock_.to_string(), "Print memory: PRINTABLE -> Memory: addr: 0x10000000, size: 262144\n");
+  EXPECT_EQ(mock_.to_string(), "Print memory: PRINTABLE -> Memory: addr: 0x10000000, size: 262144\r\n");
 }
 
 int main(int argc, char **argv) {
