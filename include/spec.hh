@@ -1,7 +1,8 @@
 
 #pragma once
-#include <stdint.h>
-#include <stddef.h>
+#include <cstdint>
+#include <cstddef>
+#include <optional>
 
 namespace reisfmt {
 struct StrIterator {
