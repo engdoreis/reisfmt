@@ -3,6 +3,7 @@
 #include <concepts>
 #include <type_traits>
 #include <array>
+#include <string>
 #include <stdint.h>
 #include <stddef.h>
 
