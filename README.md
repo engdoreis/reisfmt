@@ -87,6 +87,12 @@ Now you can print the `struct Memory` using the `fmt` library.
   fmt_.println("{}", Memory{0x1000'0000, 1024 * 256});
 ```
 
+## Openning curly brace
+The openning curly braces is the only character that needs to be scaped.
+```cpp
+  log.println("{{ Testing curly braces }", ); // Will print: "{ Testing curly braces }"
+```
+
 ## Formatting specification
 This library follows the c++  standard library format specification defined [here](https://en.cppreference.com/w/cpp/utility/format/spec).
 

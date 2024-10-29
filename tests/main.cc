@@ -92,6 +92,18 @@ TEST_F(FmtTest, int_arg_missing) {
   EXPECT_EQ(mock_.to_string(), "10 * 20 = {}");
 }
 
+TEST_F(FmtTest, bool_arg) {
+  constexpr const char *msg = "Bool: {}, {}";
+  fmt_.print(msg, true, false);
+  EXPECT_EQ(mock_.to_string(), "Bool: true, false");
+}
+
+TEST_F(FmtTest, scape_braces) {
+  constexpr const char *msg = "Bool: {{ {} }";
+  fmt_.print(msg, true);
+  EXPECT_EQ(mock_.to_string(), "Bool: { true }");
+}
+
 TEST_F(FmtTest, hex_unsigned) {
   constexpr const char *msg = "{:x} * {} = {:x}...";
   fmt_.print(msg, 10, 20, 10 * 20);

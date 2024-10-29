@@ -89,6 +89,11 @@ struct Formatter<T, StrIterator> {
 };
 
 template <Writeable T>
+struct Formatter<T, bool> {
+  static inline void print(Fmt<T> &fmt, bool v) { fmt.print(v ? "true" : "false"); }
+};
+
+template <Writeable T>
 struct Formatter<T, const char *> {
   static inline void print(Fmt<T> &fmt, const char *str) {
     StrIterator text(str);
@@ -128,10 +133,21 @@ class Fmt {
     if (it_ == nullptr || it_->size_ == 0) {
       return;
     }
-    auto start = it_->head_;
-    auto end   = it_->find('{');
-    // Print the string preceding the format guard.
-    device.write(start, end - start - int(it_->size_ > 0));
+
+    do{
+      auto start = it_->head_;
+      auto end   = it_->find('{');
+        // Print the string preceding the format guard.
+      const bool not_scape = it_->peek() != '{';
+      device.write(start, end - start - int(it_->size_ > 0 && not_scape));
+      if (not_scape) {
+        break;
+      }
+      // Double Opennig brace for scaping detected, skip one brace.
+      it_->next();
+    }while (it_->size_ > 0);
+
+
     if (it_->size_ > 0) {  // Has the format guard been found?
       spec.from_str(*it_);
 
