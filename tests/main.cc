@@ -121,6 +121,17 @@ TEST_F(FmtTest, hex_signed) {
   }
 }
 
+TEST_F(FmtTest, uppercase_hex) {
+  constexpr const char *msg = "{:X} * {} = {:X}...";
+  int a, b;
+  for (int i = 0; i < 10; i++) {
+    a = -5 * i;
+    b = 7 * i;
+    fmt_.print(msg, a, b, a * b);
+    EXPECT_EQ(mock_.to_string(), std::format(msg, a, b, a * b));
+  }
+}
+
 TEST_F(FmtTest, num_fill_width) {
   constexpr const char *msg = "{:02x} * {:03} = {:04x}...";
   unsigned int a, b;

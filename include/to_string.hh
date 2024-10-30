@@ -46,7 +46,7 @@ inline size_t to_str(std::array<char, SIZE> &buf, U num) {
 
 template <size_t SIZE, typename U>
   requires std::integral<U>
-inline size_t to_hex_str(std::array<char, SIZE> &buf, U num) {
+inline size_t to_hex_str(std::array<char, SIZE> &buf, U num, bool upper = false) {
   static_assert(SIZE >= sizeof(U) * 2);
   constexpr U shift = (sizeof(U) * 8 - 4);
 
@@ -68,13 +68,15 @@ inline size_t to_hex_str(std::array<char, SIZE> &buf, U num) {
     num <<= 4;
   }
 
+  const int conversion_factor = (upper ? 'A' : 'a') - 10;
+
   // Stringify the valid nibbles.
   for (; i > 0; --i) {
     int masked = ((num >> shift) & 0xf);
     if (masked < 0xa) {
       buf[head++] = masked + '0';
     } else {
-      buf[head++] = masked + 'a' - 10;
+      buf[head++] = conversion_factor + masked;
     }
     num <<= 4;
   }
