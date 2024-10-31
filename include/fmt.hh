@@ -88,6 +88,11 @@ struct Formatter<T, StrIterator> {
 };
 
 template <Writeable T>
+struct Formatter<T, char> {
+  static inline void print(Fmt<T> &fmt, char v) { fmt.device.write(&v, 1); }
+};
+
+template <Writeable T>
 struct Formatter<T, bool> {
   static inline void print(Fmt<T> &fmt, bool v) { fmt.print(v ? "true" : "false"); }
 };
