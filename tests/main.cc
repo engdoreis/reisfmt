@@ -68,6 +68,45 @@ TEST_F(FmtTest, pos_int) {
   EXPECT_EQ(mock_.to_string(), std::format(msg, 10, 20, 10 * 20));
 }
 
+TEST_F(FmtTest, primitive_types) {
+  constexpr const char *msg = "a={}, b={}, c={}, d={}, e={}, f={}, g={}, h={}, i={}, j={}, k={}";
+  constexpr std::array<unsigned char, 5> vals = {{5, 49, 130, 255}};
+  for (auto val : vals) {
+    char a               = val;
+    unsigned char b      = val;
+    short c              = val;
+    unsigned short d     = val;
+    int e                = val;
+    unsigned int f       = val;
+    long g               = val;
+    unsigned long h      = val;
+    long long i          = val;
+    unsigned long long j = val;
+    size_t k             = val;
+
+    fmt_.print(msg, a, b, c, d, e, f, g, h, i, j, k);
+    EXPECT_EQ(mock_.to_string(), std::format(msg, a, b, c, d, e, f, g, h, i, j, k));
+  }
+}
+
+TEST_F(FmtTest, std_types) {
+  constexpr const char *msg = "a={}, b={}, c={}, d={}, e={}, f={}, g={}, h={}";
+  constexpr std::array<unsigned char, 5> vals = {{5, 49, 130, 255}};
+  for (auto val : vals) {
+    int8_t a   = val;
+    uint8_t b  = val;
+    int16_t c  = val;
+    uint16_t d = val;
+    int32_t e  = val;
+    uint32_t f = val;
+    int64_t g  = val;
+    uint64_t h = val;
+
+    fmt_.print(msg, a, b, c, d, e, f, g, h);
+    EXPECT_EQ(mock_.to_string(), std::format(msg, a, b, c, d, e, f, g, h));
+  }
+}
+
 TEST_F(FmtTest, neg_int) {
   constexpr const char *msg = "{} * {} = {}...";
   fmt_.print(msg, -10, 20, -10 * 20);
@@ -112,6 +151,17 @@ TEST_F(FmtTest, hex_unsigned) {
 
 TEST_F(FmtTest, hex_signed) {
   constexpr const char *msg = "{:x} * {} = {:x}...";
+  int a, b;
+  for (int i = 0; i < 10; i++) {
+    a = -5 * i;
+    b = 7 * i;
+    fmt_.print(msg, a, b, a * b);
+    EXPECT_EQ(mock_.to_string(), std::format(msg, a, b, a * b));
+  }
+}
+
+TEST_F(FmtTest, uppercase_hex) {
+  constexpr const char *msg = "{:X} * {} = {:X}...";
   int a, b;
   for (int i = 0; i < 10; i++) {
     a = -5 * i;

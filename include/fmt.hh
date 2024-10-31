@@ -47,7 +47,7 @@ struct Formatter<T, U> {
         len = to_bit_str(fmt.buf, num);
         break;
       case Spec::Radix::Hex:
-        len = to_hex_str(fmt.buf, num);
+        len = to_hex_str(fmt.buf, num, fmt.spec.upper_case);
         break;
       case Spec::Radix::Dec:
       default:
@@ -86,6 +86,11 @@ struct Formatter<T, StrIterator> {
       fmt.device.write(&spec.filler_, sizeof(spec.filler_));
     }
   }
+};
+
+template <Writeable T>
+struct Formatter<T, char> {
+  static inline void print(Fmt<T> &fmt, char v) { fmt.device.write(&v, 1); }
 };
 
 template <Writeable T>
@@ -134,10 +139,10 @@ class Fmt {
       return;
     }
 
-    do{
+    do {
       auto start = it_->head_;
       auto end   = it_->find('{');
-        // Print the string preceding the format guard.
+      // Print the string preceding the format guard.
       const bool not_scape = it_->peek() != '{';
       device.write(start, end - start - int(it_->size_ > 0 && not_scape));
       if (not_scape) {
@@ -145,8 +150,7 @@ class Fmt {
       }
       // Double Opennig brace for scaping detected, skip one brace.
       it_->next();
-    }while (it_->size_ > 0);
-
+    } while (it_->size_ > 0);
 
     if (it_->size_ > 0) {  // Has the format guard been found?
       spec.from_str(*it_);

@@ -44,6 +44,7 @@ struct Spec {
   uint32_t width_                    = 0;
   char filler_                       = ' ';
   std::optional<StrIterator> prefix_ = std::nullopt;
+  bool upper_case                    = false;
 
   void from_str(StrIterator &it) {
     reset();
@@ -104,6 +105,8 @@ struct Spec {
     };
 
     switch (it.peek()) {
+      case 'X':
+        upper_case = true;
       case 'x':
         radix_ = Radix::Hex;
         it.next();
@@ -130,11 +133,12 @@ struct Spec {
   }
 
   inline void reset() {
-    radix_  = Radix::Dec;
-    align_  = Align::Right;
-    width_  = 0;
-    filler_ = ' ';
-    prefix_ = std::nullopt;
+    radix_     = Radix::Dec;
+    align_     = Align::Right;
+    width_     = 0;
+    filler_    = ' ';
+    prefix_    = std::nullopt;
+    upper_case = false;
   }
 };
 };  // namespace reisfmt
