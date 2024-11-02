@@ -153,7 +153,7 @@ class Fmt {
     } while (it_->size_ > 0);
 
     if (it_->size_ > 0) {  // Has the format guard been found?
-      spec.from_str(*it_);
+      spec.from_str(*it_, std::is_integral_v<U>);
 
       // The formatter can be extented for custom types, so the context is saved to allow the custom formatter to
       // recursively call this function.

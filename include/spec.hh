@@ -41,12 +41,17 @@ struct Spec {
 
   Radix radix_                       = Radix::Dec;
   Align align_                       = Align::Right;
+  Align default_align_               = Align::Right;
   uint32_t width_                    = 0;
   char filler_                       = ' ';
   std::optional<StrIterator> prefix_ = std::nullopt;
   bool upper_case                    = false;
 
-  void from_str(StrIterator &it) {
+  void from_str(StrIterator &it, bool is_integral = true) {
+    default_align_ = Align::Left;
+    if (is_integral) {
+      default_align_ = Align::Right;
+    }
     reset();
     if (it.peek() == ':') {
       it.next();
@@ -58,7 +63,7 @@ struct Spec {
   }
 
   inline void parse_fill_and_align(StrIterator &it) {
-    char align = '>';
+    char align = '!';  // Arbitrary character to fall into default if not specified.
     if (it.peek() == '<' || it.peek() == '>' || it.peek() == '^') {
       align   = *it.next();
       filler_ = ' ';
@@ -77,8 +82,10 @@ struct Spec {
         align_ = Align::Center;
         break;
       case '>':
-      default:
         align_ = Align::Right;
+        break;
+      default:
+        align_ = default_align_;
         break;
     }
   }
