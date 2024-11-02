@@ -69,7 +69,7 @@ TEST_F(FmtTest, pos_int) {
 }
 
 TEST_F(FmtTest, primitive_types) {
-  constexpr const char *msg = "a={}, b={}, c={}, d={}, e={}, f={}, g={}, h={}, i={}, j={}, k={}";
+  constexpr const char *msg                   = "a={}, b={}, c={}, d={}, e={}, f={}, g={}, h={}, i={}, j={}, k={}";
   constexpr std::array<unsigned char, 5> vals = {{5, 49, 130, 255}};
   for (auto val : vals) {
     char a               = val;
@@ -90,7 +90,7 @@ TEST_F(FmtTest, primitive_types) {
 }
 
 TEST_F(FmtTest, std_types) {
-  constexpr const char *msg = "a={}, b={}, c={}, d={}, e={}, f={}, g={}, h={}";
+  constexpr const char *msg                   = "a={}, b={}, c={}, d={}, e={}, f={}, g={}, h={}";
   constexpr std::array<unsigned char, 5> vals = {{5, 49, 130, 255}};
   for (auto val : vals) {
     int8_t a   = val;
@@ -186,6 +186,18 @@ TEST_F(FmtTest, string_fill_width) {
   constexpr const char *msg = "{:*>8},  {:.>9}";
   fmt_.print(msg, "hello", "world");
   EXPECT_EQ(mock_.to_string(), std::format(msg, "hello", "world"));
+}
+
+TEST_F(FmtTest, string_fill_width_default_alignment) {
+  constexpr const char *msg = "{:8},  {:9}";
+  fmt_.print(msg, "hello", "world");
+  EXPECT_EQ(mock_.to_string(), std::format(msg, "hello", "world"));
+}
+
+TEST_F(FmtTest, num_fill_width_default_alignment) {
+  constexpr const char *msg = "{:8x},  {:9}";
+  fmt_.print(msg, 104, 0x456);
+  EXPECT_EQ(mock_.to_string(), std::format(msg, 104, 0x456));
 }
 
 TEST_F(FmtTest, string_fill_two_digits) {
