@@ -5,6 +5,7 @@
 #include <array>
 #include <stdint.h>
 #include <stddef.h>
+#include <algorithm>
 
 #include "to_string.hh"
 #include "spec.hh"
@@ -60,13 +61,20 @@ struct Formatter<T, U> {
 };
 
 template <Writeable T>
+struct Formatter<T, void *> {
+  static void print(Fmt<T> &fmt, void *pointer) {
+    Formatter<T, uintptr_t>::print(fmt, reinterpret_cast<uintptr_t>(pointer));
+  }
+};
+
+template <Writeable T>
 struct Formatter<T, StrIterator> {
   static inline void print(Fmt<T> &fmt, StrIterator &text) {
     auto &spec = fmt.spec;
     if (auto opt = spec.prefix_) {  // Is there a formating modifier(#)?
       StrIterator prefix = *opt;
       fmt.device.write(prefix.head_, prefix.size_);
-      spec.width_ -= prefix.size_;
+      spec.width_ = std::max(0, spec.width_ - static_cast<int32_t>(prefix.size_));
     }
 
     if ((spec.align_ == Spec::Align::Center || spec.align_ == Spec::Align::Right) && spec.width_ > text.size_) {
