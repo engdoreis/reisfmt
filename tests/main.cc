@@ -344,6 +344,13 @@ TEST_F(FmtTest, printable_extended_types) {
   EXPECT_EQ(mock_.to_string(), "Print memory: PRINTABLE -> Memory: addr: 0x10000000, size: 262144\r\n");
 }
 
+TEST_F(FmtTest, pointer) {
+  constexpr const char *msg = "Print memory: {:p}";
+  Memory mem                = Memory{0x1000'0000, 1024 * 256};
+  fmt_.print(msg, reinterpret_cast<void *>(&mem));
+  EXPECT_EQ(mock_.to_string(), std::format(msg, reinterpret_cast<void *>(&mem)));
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
