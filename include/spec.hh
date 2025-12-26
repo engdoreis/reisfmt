@@ -41,12 +41,17 @@ struct Spec {
 
   Radix radix_                       = Radix::Dec;
   Align align_                       = Align::Right;
-  uint32_t width_                    = 0;
+  Align default_align_               = Align::Right;
+  int32_t width_                     = 0;
   char filler_                       = ' ';
   std::optional<StrIterator> prefix_ = std::nullopt;
   bool upper_case                    = false;
 
-  void from_str(StrIterator &it) {
+  void from_str(StrIterator &it, bool is_integral = true) {
+    default_align_ = Align::Left;
+    if (is_integral) {
+      default_align_ = Align::Right;
+    }
     reset();
     if (it.peek() == ':') {
       it.next();
@@ -58,7 +63,7 @@ struct Spec {
   }
 
   inline void parse_fill_and_align(StrIterator &it) {
-    char align = '>';
+    char align = '!';  // Arbitrary character to fall into default if not specified.
     if (it.peek() == '<' || it.peek() == '>' || it.peek() == '^') {
       align   = *it.next();
       filler_ = ' ';
@@ -77,8 +82,10 @@ struct Spec {
         align_ = Align::Center;
         break;
       case '>':
-      default:
         align_ = Align::Right;
+        break;
+      default:
+        align_ = default_align_;
         break;
     }
   }
@@ -97,36 +104,32 @@ struct Spec {
   }
 
   inline void parse_type(StrIterator &it) {
-    auto set_prefix = [&](const char *str, size_t size) {
+    bool force_prefix      = false;
+    auto set_radix_and_prefix = [&](Radix radix, const char *str, size_t size) {
+      upper_case = std::isupper(it.next().value());
+      radix_ = radix;
       // If the function `alternate mode`(#) is enabled.
-      if (prefix_.has_value()) {
+      if (force_prefix || prefix_.has_value()) {
         prefix_ = std::optional{StrIterator{str, size}};
       }
     };
 
-    switch (it.peek()) {
-      case 'X':
-        upper_case = true;
+    switch (std::tolower(it.peek())) {
+      case 'p':
+        force_prefix = true;
       case 'x':
-        radix_ = Radix::Hex;
-        it.next();
-        set_prefix("0x", 2);
+        set_radix_and_prefix(Radix::Hex, "0x", 2);
+        break;
+      case 'b':
+        set_radix_and_prefix(Radix::Bin, "0b", 2);
+        break;
+      case 'o':
+        set_radix_and_prefix(Radix::Oct, "0", 1);
         break;
       case 'd':
         radix_ = Radix::Dec;
         it.next();
         prefix_ = std::nullopt;
-        break;
-      case 'b':
-        radix_ = Radix::Bin;
-        it.next();
-        set_prefix("0b", 2);
-        break;
-      case 'o':
-        radix_ = Radix::Oct;
-        it.next();
-        set_prefix("0", 1);
-        break;
       default:
         break;
     }

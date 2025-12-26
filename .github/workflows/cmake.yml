@@ -31,9 +31,13 @@ jobs:
     - name: Linting
       run: find -name "*.cc" -o  -name "*.hh" | xargs clang-format -n 
 
-    - name: Build 
+    - name: Configure build system
       run: |
-        cmake -B build -S ./ && cmake --build build
+        cmake -B build -S ./
+
+    - name: Build test
+      run: |
+        cmake --build build --target reisfmt_test
 
     - name: Test 
       run: |

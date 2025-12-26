@@ -6,16 +6,13 @@
 #include <string>
 #include <stdint.h>
 #include <stddef.h>
+#include <algorithm>
 
 #include "to_string.hh"
 #include "spec.hh"
+#include "writeable.hh"
 
 namespace reisfmt {
-
-template <typename T>
-concept Writeable = requires(T t, const char *buf, size_t n) {
-  { t.write(buf, n) } -> std::same_as<void>;
-};
 
 // Foward declaration.
 template <Writeable T>
@@ -61,13 +58,20 @@ struct Formatter<T, U> {
 };
 
 template <Writeable T>
+struct Formatter<T, void *> {
+  static void print(Fmt<T> &fmt, void *pointer) {
+    Formatter<T, uintptr_t>::print(fmt, reinterpret_cast<uintptr_t>(pointer));
+  }
+};
+
+template <Writeable T>
 struct Formatter<T, StrIterator> {
   static inline void print(Fmt<T> &fmt, StrIterator &text) {
     auto &spec = fmt.spec;
     if (auto opt = spec.prefix_) {  // Is there a formating modifier(#)?
       StrIterator prefix = *opt;
       fmt.device.write(prefix.head_, prefix.size_);
-      spec.width_ -= prefix.size_;
+      spec.width_ = std::max(0, spec.width_ - static_cast<int32_t>(prefix.size_));
     }
 
     if ((spec.align_ == Spec::Align::Center || spec.align_ == Spec::Align::Right) && spec.width_ > text.size_) {
@@ -153,7 +157,7 @@ class Fmt {
     } while (it_->size_ > 0);
 
     if (it_->size_ > 0) {  // Has the format guard been found?
-      spec.from_str(*it_);
+      spec.from_str(*it_, std::is_integral_v<U>);
 
       // The formatter can be extented for custom types, so the context is saved to allow the custom formatter to
       // recursively call this function.
