@@ -5,6 +5,7 @@
 #include <format>
 
 #include "fmt.hh"
+#include "fmt_collections.hh"
 
 struct IostreamMock {
   std::vector<char> buf_;
@@ -349,6 +350,20 @@ TEST_F(FmtTest, pointer) {
   Memory mem                = Memory{0x1000'0000, 1024 * 256};
   fmt_.print(msg, reinterpret_cast<void *>(&mem));
   EXPECT_EQ(mock_.to_string(), std::format(msg, reinterpret_cast<void *>(&mem)));
+}
+
+TEST_F(FmtTest, print_array) {
+  constexpr const char *msg = "dump: {:x}";
+  constexpr const std::array<int, 3> arr= {0xa1, 0x5c, 0x49};
+  fmt_.print(msg, arr);
+  EXPECT_EQ(mock_.to_string(), "dump: [ 0xa1, 0x5c, 0x49,]\r\n");
+}
+
+TEST_F(FmtTest, print_vector) {
+  constexpr const char *msg = "dump: {:x}";
+  const std::vector<int> arr{0xa1, 0x5c, 0x49};
+  fmt_.print(msg, arr);
+  EXPECT_EQ(mock_.to_string(), "dump: [ 0xa1, 0x5c, 0x49,]\r\n");
 }
 
 int main(int argc, char **argv) {
