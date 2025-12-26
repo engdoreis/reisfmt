@@ -4,7 +4,7 @@ It only depends on some headers of the standard lib.
 
 This implementation is heavily based on c++20 features. So you need a compiler that support the features: Concepts.
  
-## How to pull using the CMake dependency manager
+## Integration with CMake r
 ```Cmake
 <!-- CMakelist.txt -->
 cmake_minimum_required(VERSION 3.13)
@@ -21,7 +21,7 @@ add_executable(${NAME} main.cc)
 target_include_directories(${NAME} PRIVATE "${reisfmt_SOURCE_DIR}/include")
 ```
 
-## How to instantiate in your project
+## Instantiate in your project
 ```cpp
 // log.hh
 #include "fmt.h"
@@ -51,7 +51,7 @@ int main() {
 }
 ```
 
-## How to extend the print function for custom types
+## Extending the print function for custom types
 The print function can be extended to print custom types in two different ways.
 The first option is recommended in most cases consist in implementing the `concept Printable` for the desired type.
 ```cpp
@@ -88,7 +88,7 @@ Now you can print the `struct Memory` using the `fmt` library.
 ```
 
 ## Openning curly brace
-The openning curly braces is the only character that needs to be scaped.
+The openning curly braces is the only character that needs to be escaped.
 ```cpp
   log.println("{{ Testing curly braces }", ); // Will print: "{ Testing curly braces }"
 ```
