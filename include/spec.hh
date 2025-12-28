@@ -1,6 +1,5 @@
 
 #pragma once
-#include <cstdint>
 #include <cstddef>
 #include <cctype>
 #include <optional>
@@ -42,7 +41,7 @@ struct Spec {
   Radix radix_                       = Radix::Dec;
   Align align_                       = Align::Right;
   Align default_align_               = Align::Right;
-  int32_t width_                     = 0;
+  int width_                         = 0;
   char filler_                       = ' ';
   std::optional<StrIterator> prefix_ = std::nullopt;
   bool upper_case                    = false;
